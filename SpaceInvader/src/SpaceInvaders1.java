@@ -75,6 +75,7 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 		ufoShow();
 		while (true) {
 			ufoStart();
+			fireShow();
 			move();
 			Iterator<Point> itr = fireList.iterator();
 			while (itr.hasNext()) {
@@ -123,6 +124,15 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 			}
 		}
 	}
+	
+	public void fireShow() {
+		if(newFire) {
+			Point fire = new Point();
+			fire.x = playX;
+			fire.y = playY;
+			fireList.add(fire);
+		}
+	}
 
 	// play运动控制
 	public void move() {
@@ -153,10 +163,6 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 		}
 		if (key == KeyEvent.VK_CONTROL) {
 			newFire = true;
-			Point fire = new Point();
-			fire.x = playX;
-			fire.y = playY;
-			fireList.add(fire);
 		}
 	}
 
