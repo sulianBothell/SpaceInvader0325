@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 	// player移动速度
 	int playSpeed = 2;
 	// 子弹速度
-	int bulletSpeed = 8;
+	int bulletSpeed = 4;
 	int speed = 0;
 	//子弹圆心位置
 	public static int bulletRadius = 5;
@@ -34,11 +35,12 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 	public int bulletX = 0;//playX + playDiam / 2;
 
 	// 键盘输入判断
-	boolean movingLeft = false, movingRight = false, hasFire = false;
-	boolean fireLive = true;// 判断是否出界，或者消失
+	boolean movingLeft = false, movingRight = false;
+	boolean fireLive = false;// 判断是否出界，或者消失
+	boolean newFire = false; // 判断是否装新子弹
 
-	//List<Bullet> fireList = new ArrayList<Bullet>();
-	//Bullet bi;
+	List<Point> fireList = new ArrayList<Point>();//子弹夹
+
 
 	public SpaceInvader() {
 		JFrame jf = new JFrame();
@@ -54,20 +56,20 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
+		
 		for (int i = 0; i < 10; i++) {
 			for (int j = 0; j < 5; j++) {
 				g.fillOval(ufoX - ufoRadius + i * 30, ufoY - ufoRadius + j * 30, ufoRadius*2, ufoRadius*2);
 			}
 		}
+		
 		g.fillOval(playX - playRadius, playY- playRadius, playRadius*2, playRadius*2);
-		if(hasFire) {
-			g.fillOval(bulletX - bulletRadius, bulletY - bulletRadius, bulletRadius *2, bulletRadius *2);
+		
+		for (int i = 0; i < fireList.size(); i++) {
+			Point p = fireList.get(i);
+			g.fillOval(p.x - bulletRadius, p.y - bulletRadius, bulletRadius *2, bulletRadius *2);
 		}
-		/*for (int i = 0; i < fireList.size(); i++) {
-			Bullet b = fireList.get(i);
-			b.drawBullet(g);
-		}
-		g.drawString("Bullets Count:" + fireList.size(), 10, 50);*/
+		g.drawString("Bullets Count:" + fireList.size(), 10, 50);
 		g.dispose();
 	}
 
@@ -75,6 +77,7 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 		new SpaceInvader();
 	}
 
+	// 当前状态
 	@Override
 	public void run() {
 		while (true) {
@@ -82,14 +85,16 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 			// 要修改的地方
 			move();
 			// 子弹
-			//fire(newFire).bulletMove();
-			if(hasFire) {
-				bulletY = bulletY - 3;
-				if(bulletY < 0) {
-					hasFire = false;
+			if(!fireList.isEmpty()) {
+				for (int i = 0; i < fireList.size(); i++) {
+					Point fire = fireList.get(i);
+					fire.y -= bulletSpeed;
+					if(fire.y < 0 ) {
+						fireList.remove(i);
+					}
 				}
 			}
-			
+
 			repaint();
 
 			try {
@@ -117,8 +122,8 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 		} else {
 			speed = 0;
 		}
-		if (playX < 0) {
-			playX = 0;
+		if (playX < playRadius) {
+			playX = playRadius;
 		}
 		if (playX > width - playRadius) {
 			playX = width - playRadius;
@@ -144,11 +149,11 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 			movingRight = true;
 		}
 		if (key == KeyEvent.VK_CONTROL) {
-			if(!hasFire) {
-				hasFire = true;
-				bulletX = playX;
-				bulletY = playY;
-			}
+			newFire = true;
+			Point fire = new Point();
+			fire.x = playX;
+			fire.y = playY;
+			fireList.add(fire);
 		}
 
 	}
@@ -161,6 +166,9 @@ public class SpaceInvader extends JPanel implements Runnable, KeyListener {
 		}
 		if (key == KeyEvent.VK_RIGHT) {
 			movingRight = false;
+		}
+		if (key == KeyEvent.VK_CONTROL) {
+			newFire = false;
 		}
 	}
 
