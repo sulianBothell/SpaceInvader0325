@@ -15,23 +15,32 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 	// Jpanel 大小
 	int width = 550;
 	int height = 550;
-	// player圆心位置
-	public static int playRadius = 15;
-	int playX = playRadius;
-	int playY = (int) (height * 0.9);
+	// ship圆心位置
+	public static int shipRadius = 15;
+	int shipX = shipRadius;
+	int shipY = (int) (height * 0.9);
+	// ship移动速度
+	int shipSpeed = 4;
+	
 	// UFO圆心位置
 	public static int ufoRadius = 10;
 	int ufoX = ufoRadius;
 	int ufoY = (int) (height * 0.2);
 	// UFO移动速度
-	int ufoSpeed = 1;
-	// player移动速度
-	int playSpeed = 2;
+	int distanceX = 1;
+	int distanceY = 10;
+	
+	//enemyShip
+	int enemyShipX = shipRadius;
+	int enemyShipY = (int) (height * 0.1);
+	int enemyShipSpeed = 2;
+	public static final double FIRING_FREQUENCY = 0.01;
+	
 	// 子弹速度
 	int bulletSpeed = 8;
-	int speed = 0;
-	// 子弹圆心位置
+	// 子弹半径
 	public static int bulletRadius = 2;
+	
 	// 键盘输入判断
 	boolean movingLeft = false, movingRight = false;
 	boolean newFire = false; // 判断是否装新子弹
@@ -53,15 +62,20 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		for (int i = 0; i < ufoList.size(); i++) {
-			Point p = ufoList.get(i);
-			g.fillOval(p.x - ufoRadius, p.y - ufoRadius, ufoRadius * 2, ufoRadius * 2);
-		}
-		g.fillOval(playX - playRadius, playY - playRadius, playRadius * 2, playRadius * 2);
+		Color c = Color.BLACK;
+		g.setColor(c);
+		g.fillOval(shipX - shipRadius, shipY - shipRadius, shipRadius * 2, shipRadius * 2);
 		for (int i = 0; i < fireList.size(); i++) {
 			Point p = fireList.get(i);
 			g.fillOval(p.x - bulletRadius, p.y - bulletRadius, bulletRadius * 2, bulletRadius * 2);
 		}
+		g.setColor(Color.YELLOW);
+		g.fillOval(enemyShipX - shipRadius, enemyShipY - shipRadius, shipRadius * 2, shipRadius * 2);
+		for (int i = 0; i < ufoList.size(); i++) {
+			Point p = ufoList.get(i);
+			g.fillOval(p.x - ufoRadius, p.y - ufoRadius, ufoRadius * 2, ufoRadius * 2);
+		}
+		g.setColor(c);
 		g.dispose();
 	}
 
@@ -74,9 +88,10 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 	public void run() {
 		ufoShow();
 		while (true) {
-			ufoStart();
+			enemyShip();
+			ufoMove();
 			fireShow();
-			move();
+			shipMove();
 			Iterator<Point> itr = fireList.iterator();
 			while (itr.hasNext()) {
 				Point fire = itr.next();
@@ -97,7 +112,7 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 			}
 			repaint();
 			try {
-				Thread.sleep(10);
+				Thread.sleep(20);
 			} catch (InterruptedException e) {
 			}
 		}
@@ -115,40 +130,57 @@ public class SpaceInvaders1 extends JPanel implements Runnable, KeyListener {
 	}
 
 	// ufo运动控制
-	public void ufoStart() {
+	public void ufoMove() {
 		for (int i = 0; i < ufoList.size(); i++) {
 			Point ufoTemp = ufoList.get(i);
-			ufoTemp.x += ufoSpeed;
+			ufoTemp.x += distanceX;
 			if (ufoTemp.x >= width) {
 				ufoTemp.x = 0;
+				ufoTemp.y += distanceY;
 			}
 		}
 	}
 	
+	public void enemyShip() {
+		enemyShipX += enemyShipSpeed;
+		if(enemyShipX >= width) {
+			enemyShipX = 0;
+		}
+		//敌人飞船射出子弹
+		if(Math.random() < FIRING_FREQUENCY) {
+			fireStart(enemyShipX, enemyShipY);
+		}
+	}
+	
+	public void fireStart(int posX, int posY) {
+		Point fire = new Point();
+		fire.x = posX;
+		fire.y = posY;
+		fireList.add(fire);
+	}
+	
+	//玩家飞船射出子弹
 	public void fireShow() {
 		if(newFire) {
-			Point fire = new Point();
-			fire.x = playX;
-			fire.y = playY;
-			fireList.add(fire);
+			fireStart(shipX, shipY);
 		}
 	}
 
-	// play运动控制
-	public void move() {
-		speed = playSpeed;
+	// ship运动控制
+	public void shipMove() {
+		int speed = shipSpeed;
 		if (movingLeft && !movingRight) {
-			playX -= speed;
+			shipX -= speed;
 		} else if (!movingLeft && movingRight) {
-			playX += speed;
+			shipX += speed;
 		} else {
 			speed = 0;
 		}
-		if (playX < playRadius) {
-			playX = playRadius;
+		if (shipX < shipRadius) {
+			shipX = shipRadius;
 		}
-		if (playX > width - playRadius) {
-			playX = width - playRadius;
+		if (shipX > width - shipRadius) {
+			shipX = width - shipRadius;
 		}
 	}
 
